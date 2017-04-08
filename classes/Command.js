@@ -19,6 +19,7 @@ class Command extends Base {
 }
 
 Command.Types = {
+	KNOWN: 'known',
 	UNKNOWN: 'unknown'
 }
 
