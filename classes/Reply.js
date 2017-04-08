@@ -5,10 +5,10 @@ const _ = require( 'lodash' )
 
 class Reply extends Base {
 
-	constructor( message, responseCode, responseParams ) {
+	constructor( parent, message, responseCode, responseParams ) {
 		super();
+		this.parent = parent;
 		this.message = message;
-		this.parent = message;
 		this.responseCode = responseCode;
 		this.responseParams = responseParams;
 	}

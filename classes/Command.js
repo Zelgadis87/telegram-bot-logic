@@ -31,10 +31,8 @@ Command.createRules = ( engine ) => {
 		.condition( ( c ) => !c.accepted )
 		.effect( (c) => {
 			c.accepted = true;
-			c.processed = true;
 			c.type = Command.Types.UNKNOWN;
-			c.reply = new Reply( c.message, 'unknown-command', {} );
-			c.reply.parent = c;
+			c.reply = new Reply( c, c.message, 'unknown-command', {} );
 			engine.assert( c.reply );
 
 			console.warn( "I don't know how to reply to command:", c.command );

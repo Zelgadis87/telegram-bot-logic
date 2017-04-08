@@ -71,7 +71,7 @@ Message.createRules = ( engine ) => {
 		.effect( (m) => {
 			m.accepted = true;
 			m.type = Message.Types.UNKNOWN;
-			engine.assert( new Reply( m, 'unknown-message', {} ) );
+			engine.assert( new Reply( m, m, 'unknown-message', {} ) );
 		} );
 
 }
