@@ -1,6 +1,7 @@
 
 const _ = require( 'lodash' )
 	, RuleReactor = require( 'rule-reactor' )
+	, safeStringify = require('json-stringify-safe')
 	;
 
 let Update = require( './classes/Update.js' )
@@ -111,8 +112,12 @@ function TelegramBotLogic() {
 	}
 
 	function stop() {
-		if ( _reactor )
-			return _reactor.stop();
+		if ( _reactor ) {
+			return _reactor.stop().then( () => {
+				let machineData = Array.from( _reactor.data.entries() );
+				console.info( 'Reactor Data: ', safeStringify(machineData, null, 2) )
+			});
+		}
 	}
 
 	registerComponent( 'Base', Base, Base.createRules );
