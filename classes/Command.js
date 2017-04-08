@@ -8,9 +8,12 @@ class Command extends Base {
 
 	constructor( message ) {
 		super();
-		this.command = message.data.text.split( ' ' )[ 0 ].substring( 1 );
 		this.message = message;
 		this.parent = message;
+
+		let words = message.data.text.split( ' ' );
+		this.command = words[ 0 ].substring( 1 );
+		this.arguments = words.slice(1);
 	}
 
 }
