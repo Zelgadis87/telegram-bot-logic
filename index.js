@@ -4,6 +4,7 @@ const _ = require( 'lodash' ),
 	RuleReactor = require( 'rule-reactor' );
 
 let Update = require( './classes/Update.js' )
+	, Base = require( './classes/Base.js' )
 	, Message = require( './classes/Message.js' )
 	, Rule = require( './classes/Rule.js' )
 	, Command = require( './classes/Command.js' )
@@ -137,6 +138,7 @@ function TelegramBotLogic() {
 	this.insertUpdate = insertUpdate;
 	this.registerComponent = registerComponent;
 	this.addRules = addRules;
+	this.getEngine = getEngine;
 
 	// Implementation
 
@@ -151,9 +153,15 @@ function TelegramBotLogic() {
 		_.each( _initFunctions, (fn) => fn( _engine ) );
 		_.each( _engine.buildRules(), (r) => _reactor.createRule( r.name, r.salience, r.domain, r.conditions, r.effect ) );
 
+		_reactor.trace( 0 ) ;
 		_reactor.run( Infinity, true );
 		return
 
+	}
+
+	function getEngine() {
+		// DEBUG ONLY
+		return _engine;
 	}
 
 	function insertUpdate( telegramUpdate ) {
@@ -180,6 +188,9 @@ function TelegramBotLogic() {
 
 		Object.defineProperty( engine, 'domain', {
 			get: () => _reactor.domain
+		} );
+		Object.defineProperty( engine, 'data', {
+			get: () => _reactor.data
 		} );
 
 		// Implementation
@@ -233,6 +244,7 @@ function TelegramBotLogic() {
 			return _reactor.stop();
 	}
 
+	registerComponent( 'Base', Base, Base.createRules );
 	registerComponent( 'Update', Update, Update.createRules );
 	registerComponent( 'Message', Message, Message.createRules );
 	registerComponent( 'Command', Command, Command.createRules );

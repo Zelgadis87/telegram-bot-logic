@@ -1,30 +1,40 @@
 
 const _ = require( 'lodash' )
+	, Base = require( './Base.js' )
 	, Reply = require( './Reply.js' )
 	;
 
-function Command( message ) {
-	this.command = message.data.text.split( ' ' )[ 0 ].substring( 1 );
-	this.message = message;
-	this.processed = false;
+class Command extends Base {
 
-	this.markBeingProcessed = () => {
-		this.processed = true;
-		message.completed = true;
-	};
+	constructor( message ) {
+		super();
+		this.command = message.data.text.split( ' ' )[ 0 ].substring( 1 );
+		this.message = message;
+		this.parent = message;
+	}
+
+}
+
+Command.Types = {
+	UNKNOWN: 'unknown'
 }
 
 Command.createRules = ( engine ) => {
 
 	engine.createRule()
-		.name( 'Unknown command' )
+		.name( 'Command.Unknown' )
 		.domain( { c: Command } )
 		.salience( -1000 )
+		.condition( ( c ) => !c.accepted )
 		.effect( (c) => {
+			c.accepted = true;
+			c.processed = true;
+			c.type = Command.Types.UNKNOWN;
+			c.reply = new Reply( c.message, 'unknown-command', {} );
+			c.reply.parent = c;
+			engine.assert( c.reply );
+
 			console.warn( "I don't know how to reply to command:", c.command );
-			c.message.completed = true;
-			engine.assert( new Reply( c.message, 'unknown-command', {} ) );
-			engine.retract( c );
 		} );
 
 }

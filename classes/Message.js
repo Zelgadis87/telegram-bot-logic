@@ -1,28 +1,30 @@
 
 const _ = require( 'lodash' )
+	, Base = require( './Base.js' )
 	, Command = require( './Command.js' )
 	, Reply = require( './Reply.js' )
 	;
 
-// function getter( destObj, sourceObj, sourceProp, destProp ) {
-// 	destProp = destProp || sourceProp;
-// 	Object.defineProperty( destObj, destProp, {
-// 		get: () => source[sourceProp]
-// 	});
-// }
+class Message extends Base {
 
-function Message( telegramMessage, update ) {
+	constructor( telegramMessage, update ) {
+		super();
+		this.data = telegramMessage;
+		this.update = update;
+		this.parent = update;
+	}
 
-	this.data = telegramMessage;
-	this.update = update;
-	this.type = null;
+}
 
+Message.Types = {
+	COMMAND: 'command',
+	UNKNOWN: 'unknown'
 }
 
 Message.createRules = ( engine ) => {
 
 	engine.createRule()
-		.name( 'Get message chat' )
+		.name( 'Message.RetrieveChat' )
 		.salience( 10 )
 		.domain( { m: Message } )
 		.condition( (m) => m.data.chat && !m.chat )
@@ -36,7 +38,7 @@ Message.createRules = ( engine ) => {
 		} );
 
 	engine.createRule()
-		.name( 'Get message user' )
+		.name( 'Message.RetrieveUser' )
 		.salience( 10 )
 		.domain( { m: Message } )
 		.condition( (m) => m.data.from && !m.user )
@@ -50,23 +52,25 @@ Message.createRules = ( engine ) => {
 		} );
 
 	engine.createRule()
-		.name( 'I have a command message' )
+		.name( 'Message.Command' )
 		.domain( { m: Message } )
-		.condition( (m) => !m.type )
+		.condition( (m) => !m.accepted )
 		.condition( (m) => m.data.text && m.data.text.length && m.data.text[ 0 ] === '/' )
 		.effect( (m) => {
-			m.type = 'COMMAND';
-			engine.assert( new Command( m ) );
+			m.accepted = true;
+			m.type = Message.Types.COMMAND;
+			m.command = new Command( m )
+			engine.assert( m.command );
 		} );
 
 	engine.createRule()
-		.name( 'Unknown message' )
+		.name( 'Message.Unknown' )
 		.domain( { m: Message } )
 		.salience( -1000 )
-		.condition( (m) => !m.type )
+		.condition( (m) => !m.accepted )
 		.effect( (m) => {
-			m.type = 'UNKNOWN';
-			m.completed = true;
+			m.accepted = true;
+			m.type = Message.Types.UNKNOWN;
 			engine.assert( new Reply( m, 'unknown-message', {} ) );
 		} );
 
