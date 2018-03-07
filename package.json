@@ -1,5 +1,5 @@
 {
-  "name": "telegram-bot-logic",
+  "name": "@zelgadis87/telegram-bot-logic",
   "version": "0.1.0",
   "description": "A wrapper around rule-reactor to handle Telegram messages.",
   "main": "index.js",
@@ -8,6 +8,6 @@
   "dependencies": {
     "json-stringify-safe": "^5.0.1",
     "lodash": "^4.17.4",
-    "rule-reactor": "github:zelgadis87/rule-reactor#0.1.8"
+    "rule-reactor": "github:zelgadis87/rule-reactor#0.1.15"
   }
 }
