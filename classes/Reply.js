@@ -28,8 +28,9 @@ Reply.createRules = ( engine ) => {
 				console.info( 'Reply sent' );
 				r.processed = true;
 			}, (err) => {
+				// TODO: This should cause a request failed object with N retries and X cooldown.
 				console.error( 'Failed to send message to ' + r.message.chat.id, err );
-				r.accepted = false;
+				r.processed = true;
 			} );
 		} );
 
