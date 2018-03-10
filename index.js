@@ -10,6 +10,7 @@ let Update = require( './classes/Update.js' )
 	, Rule = require( './classes/Rule.js' )
 	, Command = require( './classes/Command.js' )
 	, Reply = require( './classes/Reply.js' )
+	, ShutdownRequest = require( './classes/ShutdownRequest.js' )
 	;
 
 function TelegramBotLogic() {
@@ -17,6 +18,7 @@ function TelegramBotLogic() {
 	// Interface
 	this.activate = activate;
 	this.stop = stop;
+	this.stopImmediately = stopImmediately;
 	this.insertUpdate = insertUpdate;
 	this.registerComponent = registerComponent;
 	this.registerInitializationFunctions = registerInitializationFunctions;
@@ -26,7 +28,8 @@ function TelegramBotLogic() {
 	var _reactor,
 		_engine,
 		_initFunctions = [],
-		_domain = {};
+		_domain = {},
+		_shuttingDown = false;
 
 	function activate(bot, knownChats, knownUsers) {
 		_reactor = new RuleReactor( _domain );
@@ -40,6 +43,8 @@ function TelegramBotLogic() {
 	}
 
 	function insertUpdate( telegramUpdate ) {
+		if ( _shuttingDown )
+			throw new Error( 'Cannot process update since we are shutting down.' );
 		_reactor.assert( new Update( telegramUpdate ) );
 		return Promise.resolve( telegramUpdate );
 	}
@@ -75,7 +80,7 @@ function TelegramBotLogic() {
 		}
 
 		function buildRules() {
-			return _.map( _ruleBuilders, (rb) => rb.build() );
+			return _.map( _ruleBuilders, rb => rb.build() );
 		}
 
 		function getChat( chat ) {
@@ -112,12 +117,31 @@ function TelegramBotLogic() {
 	}
 
 	function stop() {
-		if ( _reactor ) {
-			return _reactor.stop().then( () => {
-				let machineData = Array.from( _reactor.data.entries() );
-				console.info( 'Reactor Data: ', safeStringify(machineData, null, 2) )
-			});
+
+		if ( _shuttingDown )
+			return _shuttingDown;
+
+		if ( !_reactor ) {
+			_shuttingDown = stopImmediately();
+			return _shuttingDown;
 		}
+
+		_shuttingDown = new Promise( resolve => _reactor.assert( new ShutdownRequest( resolve ) ) ).then( stopImmediately );
+		return _shuttingDown;
+		
+	}
+
+	function stopImmediately() {
+		if ( _reactor ) {
+			return _reactor.stop().then( onStopped );
+		} else {
+			return Promise.resolve();
+		}
+	}
+
+	function onStopped() {
+		let machineData = Array.from( _reactor.data.entries() );
+		console.info( 'Reactor Data: ', safeStringify( machineData, null, 2 ) )
 	}
 
 	registerComponent( 'Base', Base, Base.createRules );
@@ -125,6 +149,7 @@ function TelegramBotLogic() {
 	registerComponent( 'Message', Message, Message.createRules );
 	registerComponent( 'Command', Command, Command.createRules );
 	registerComponent( 'Reply', Reply, Reply.createRules );
+	registerComponent( 'ShutdownRequest', ShutdownRequest, ShutdownRequest.createRules );
 
 	return this;
 

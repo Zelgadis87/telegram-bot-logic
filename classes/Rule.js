@@ -64,7 +64,7 @@ Rule.Builder = function() {
 	}
 
 	function effect(x) {
-		// TODO: Check if X is a functi8on..
+		// TODO: Check if X is a function..
 		_effect = x;
 		return _builder;
 	}
