@@ -23,6 +23,12 @@ function TelegramBotLogic() {
 	this.registerComponent = registerComponent;
 	this.registerInitializationFunctions = registerInitializationFunctions;
 
+	this.Base = Base;
+	this.Update = Update;
+	this.Message = Message;
+	this.Command = Command;
+	this.Reply = Reply;
+
 	// Implementation
 
 	var _reactor,
