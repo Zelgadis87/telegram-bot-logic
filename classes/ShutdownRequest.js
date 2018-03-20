@@ -2,6 +2,7 @@
 class ShutdownRequest {
 
 	constructor( resolve ) {
+		this.__className = this.constructor.name;
 		this.resolve = resolve;
 	}
 
