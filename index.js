@@ -8,6 +8,7 @@ let Update = require( './classes/Update.js' )
 	, Message = require( './classes/Message.js' )
 	, Rule = require( './classes/Rule.js' )
 	, Command = require( './classes/Command.js' )
+	, CommandRule = require( './classes/CommandRule.js' )
 	, Reply = require( './classes/Reply.js' )
 	, ShutdownRequest = require( './classes/ShutdownRequest.js' )
 	;
@@ -150,6 +151,7 @@ function TelegramBotLogic() {
 	registerComponent( 'Update', Update, Update.createRules );
 	registerComponent( 'Message', Message, Message.createRules );
 	registerComponent( 'Command', Command, Command.createRules );
+	registerComponent( 'CommandRule', CommandRule, CommandRule.createRules );
 	registerComponent( 'Reply', Reply, Reply.createRules );
 	registerComponent( 'ShutdownRequest', ShutdownRequest, ShutdownRequest.createRules );
 
