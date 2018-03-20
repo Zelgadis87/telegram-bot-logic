@@ -9,7 +9,6 @@ class Update extends Base {
 	constructor( telegramUpdate ) {
 		super();
 		this.data = telegramUpdate;
-		this.retractWhenProcessed = false;
 	}
 
 }
