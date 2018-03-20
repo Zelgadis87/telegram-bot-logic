@@ -12,8 +12,8 @@ class Command extends Base {
 		this.parent = message;
 
 		let words = message.data.text.split( ' ' );
-		this.command = words[ 0 ].substring( 1 );
-		this.arguments = words.slice(1);
+		this.command = words[ 0 ].substring( 1 ).toLowerCase();
+		this.arguments = words.slice( 1 );
 	}
 
 }
