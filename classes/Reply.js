@@ -21,13 +21,13 @@ Reply.createRules = ( engine ) => {
 		.createRule()
 		.name( 'Reply.Send' )
 		.domain( { r: Reply } )
-		.condition( (r) => !r.accepted )
-		.effect( (r) => {
+		.condition( function( r ) { return !r.accepted; } )
+		.effect( function( r ) {
 			r.accepted = true;
 			engine.bot.sendMessage( r.message.chat.id, r.responseCode, _.extend( {}, r.options, { reply_to_message_id: r.message.data.message_id } ) ).then( () => {
 				console.info( 'Reply sent' );
 				r.processed = true;
-			}, (err) => {
+			}, ( err ) => {
 				// TODO: This should cause a request failed object with N retries and X cooldown.
 				console.error( 'Failed to send message to ' + r.message.chat.id, err );
 				r.processed = true;
@@ -38,9 +38,9 @@ Reply.createRules = ( engine ) => {
 		.createRule()
 		.name( 'Reply.UpdateMessageWithReply' )
 		.domain( { r: Reply } )
-		.condition( (r) => r.processed )
-		.condition( (r) => !r.message.reply )
-		.effect( (r) => {
+		.condition( function( r ) { return r.processed; } )
+		.condition( function( r ) { return !r.message.reply; } )
+		.effect( function( r ) {
 			r.message.reply = r;
 		} );
 

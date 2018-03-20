@@ -24,9 +24,9 @@ Update.createRules = ( engine ) => {
 	engine.createRule()
 		.name( 'Update.Message' )
 		.domain( { u: Update } )
-		.condition( ( u ) => !u.accepted )
-		.condition( ( u ) => u.data.message )
-		.effect( ( u ) => {
+		.condition( function( u ) { return !u.accepted; } )
+		.condition( function( u ) { return u.data.message; } )
+		.effect( function( u ) {
 			u.accepted = true;
 			u.type = Update.Types.MESSAGE;
 			u.message = new Message( u.data.message, u )
@@ -37,8 +37,8 @@ Update.createRules = ( engine ) => {
 		.name( 'Update.Unknown' )
 		.salience( -1000 )
 		.domain( { u: Update } )
-		.condition( ( u ) => !u.accepted )
-		.effect( ( u ) => {
+		.condition( function( u ) { return !u.accepted; } )
+		.effect( function( u ) {
 			u.accepted = true;
 			u.processed = true;
 			u.type = Update.Types.UNKNOWN;

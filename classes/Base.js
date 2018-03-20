@@ -20,16 +20,16 @@ Base.createRules = ( engine ) => {
 		.name( 'Base.PropagateProcessedToParent' )
 		.salience( -100 )
 		.domain( { b: Base } )
-		.condition( (b) => b.processed && b.propageteProcessedToParent )
-		.condition( (b) => b.parent && !b.parent.processed )
-		.effect( (b) => b.parent.processed = true );
+		.condition( function( b ) { return b.processed && b.propageteProcessedToParent; } )
+		.condition( function( b ) { return b.parent && !b.parent.processed; } )
+		.effect( function( b ) { return b.parent.processed = true; } );
 
 	engine.createRule()
 		.name( 'Base.RetractWhenProcessed' )
 		.salience( -200 )
 		.domain( { b: Base } )
-		.condition( (b) => b.processed && b.retractWhenProcessed )
-		.effect( (b) => engine.retract(b) );
+		.condition( function( b ) { return b.processed && b.retractWhenProcessed; } )
+		.effect( function( b ) { return engine.retract( b ); } );
 
 };
 

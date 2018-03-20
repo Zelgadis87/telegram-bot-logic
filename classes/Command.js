@@ -29,8 +29,8 @@ Command.createRules = ( engine ) => {
 		.name( 'Command.Unknown' )
 		.domain( { c: Command } )
 		.salience( -1000 )
-		.condition( ( c ) => !c.accepted )
-		.effect( (c) => {
+		.condition( function( c ) { return !c.accepted; } )
+		.effect( function( c ) {
 			c.accepted = true;
 			c.type = Command.Types.UNKNOWN;
 			c.reply = new Reply( c, c.message, 'unknown-command', {} );

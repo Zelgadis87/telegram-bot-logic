@@ -27,8 +27,8 @@ Message.createRules = ( engine ) => {
 		.name( 'Message.RetrieveChat' )
 		.salience( 10 )
 		.domain( { m: Message } )
-		.condition( (m) => m.data.chat && !m.chat )
-		.effect( (m) => {
+		.condition( function( m ) { return m.data.chat && !m.chat; } )
+		.effect( function( m ) {
 			m.chat = engine.getChat( m.data.chat );
 			m.chat.receivedMessages++;
 			if ( !m.chat.lastUpdated || m.chat.lastUpdated < m.data.date ) {
@@ -41,8 +41,8 @@ Message.createRules = ( engine ) => {
 		.name( 'Message.RetrieveUser' )
 		.salience( 10 )
 		.domain( { m: Message } )
-		.condition( (m) => m.data.from && !m.user )
-		.effect( (m) => {
+		.condition( function( m ) { return m.data.from && !m.user; } )
+		.effect( function( m ) {
 			m.user = engine.getUser( m.data.from );
 			m.user.receivedMessages++;
 			if ( !m.user.lastUpdated || m.user.lastUpdated < m.data.date ) {
@@ -54,9 +54,9 @@ Message.createRules = ( engine ) => {
 	engine.createRule()
 		.name( 'Message.Command' )
 		.domain( { m: Message } )
-		.condition( (m) => !m.accepted )
-		.condition( (m) => m.data.text && m.data.text.length && m.data.text[ 0 ] === '/' )
-		.effect( (m) => {
+		.condition( function( m ) { return !m.accepted; } )
+		.condition( function( m ) { return m.data.text && m.data.text.length && m.data.text[ 0 ] === '/'; } )
+		.effect( function( m ) {
 			m.accepted = true;
 			m.type = Message.Types.COMMAND;
 			m.command = new Command( m )
@@ -67,8 +67,8 @@ Message.createRules = ( engine ) => {
 		.name( 'Message.Unknown' )
 		.domain( { m: Message } )
 		.salience( -1000 )
-		.condition( (m) => !m.accepted )
-		.effect( (m) => {
+		.condition( function( m ) { return !m.accepted; } )
+		.effect( function( m ) {
 			m.accepted = true;
 			m.type = Message.Types.UNKNOWN;
 			engine.assert( new Reply( m, m, 'unknown-message', {} ) );
