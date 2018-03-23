@@ -16,7 +16,8 @@ let Update = require( './classes/Update.js' )
 function TelegramBotLogic() {
 
 	// Interface
-	this.activate = activate;
+	this.init = init;
+	this.run = run;
 	this.stop = stop;
 	this.stopImmediately = stopImmediately;
 	this.insertUpdate = insertUpdate;
@@ -24,25 +25,35 @@ function TelegramBotLogic() {
 	this.registerInitializationFunctions = registerInitializationFunctions;
 
 	Object.defineProperty( this, 'data', {
-		get: getData
+		get: () => Array.from( _reactor.data.entries() )
+	} );
+
+	Object.defineProperty( this, 'domain', {
+		get: () => _domain
 	} );
 
 	// Implementation
 
-	var _reactor,
+	var me = this,
+		_reactor,
 		_engine,
 		_initFunctions = [],
 		_domain = {},
+		_running = false,
 		_shuttingDown = false;
 
-	function activate(bot, knownChats, knownUsers) {
+	function init( bot, knownChats, knownUsers ) {
 		_reactor = new RuleReactor( _domain );
 		_engine = new Engine( _reactor, bot, knownChats, knownUsers );
-		_.each( _initFunctions, (fn) => fn( _engine ) );
-		_.each( _engine.buildRules(), (r) => _reactor.createRule( r.name, r.salience, r.domain, r.conditions, r.effect ) );
+		_reactor.trace( 0 );
+	}
 
-		_reactor.trace( 0 ) ;
-		_reactor.run( Infinity, true );
+	function run() {
+		if ( !_running ) {
+			_.each( _initFunctions, fn => fn( _engine ) );
+			_.each( _engine.buildRules(), r => _reactor.createRule( r.name, r.salience, r.domain, r.conditions, r.effect ) );
+			_reactor.run( Infinity, true );
+		}
 		return
 	}
 
@@ -68,7 +79,7 @@ function TelegramBotLogic() {
 		engine.getUser = getUser;
 		engine.bot = bot;
 
-		_.each( [ 'assert', 'retract', 'not', 'exists' ], (k) => engine[k] = _.bind( _reactor[k], _reactor ) );
+		_.each( [ 'assert', 'retract', 'not', 'exists' ], ( k ) => engine[ k ] = _.bind( _reactor[ k ], _reactor ) );
 
 		Object.defineProperty( engine, 'domain', {
 			get: () => _reactor.domain
@@ -79,7 +90,7 @@ function TelegramBotLogic() {
 
 		function createRule() {
 			var r = Rule.Builder.create();
-			_ruleBuilders.push(r);
+			_ruleBuilders.push( r );
 			return r;
 		}
 
@@ -111,7 +122,7 @@ function TelegramBotLogic() {
 
 	}
 
-	function registerComponent(componentName, componentClass, componentInitializationFn) {
+	function registerComponent( componentName, componentClass, componentInitializationFn ) {
 		_domain[ componentName ] = componentClass;
 		registerInitializationFunctions( componentInitializationFn );
 	}
@@ -132,7 +143,7 @@ function TelegramBotLogic() {
 
 		_shuttingDown = new Promise( resolve => _reactor.assert( new ShutdownRequest( resolve ) ) ).then( stopImmediately );
 		return _shuttingDown;
-		
+
 	}
 
 	function stopImmediately() {
@@ -141,10 +152,6 @@ function TelegramBotLogic() {
 		} else {
 			return Promise.resolve();
 		}
-	}
-
-	function getData() {
-		return Array.from( _reactor.data.entries() );
 	}
 
 	registerComponent( 'Base', Base, Base.createRules );
