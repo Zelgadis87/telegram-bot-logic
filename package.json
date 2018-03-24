@@ -8,6 +8,6 @@
   "dependencies": {
     "json-stringify-safe": "^5.0.1",
     "lodash": "^4.17.4",
-    "rule-reactor": "github:zelgadis87/rule-reactor#0.1.15"
+    "rule-reactor": "github:zelgadis87/rule-reactor#0.1.16"
   }
 }

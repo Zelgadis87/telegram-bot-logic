@@ -2,7 +2,6 @@
 class Base {
 
 	constructor() {
-		this.__className = this.constructor.name;
 		this.parent = null;
 		this.accepted = false;
 		this.processing = false;

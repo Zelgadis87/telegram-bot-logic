@@ -2,10 +2,8 @@
 class ShutdownRequest {
 
 	constructor( resolve ) {
-		this.__className = this.constructor.name;
 		this.accepted = false;
 		this.resolve = resolve;
-		this.timestamp = new Date();
 	}
 
 }
