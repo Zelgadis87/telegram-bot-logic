@@ -15,43 +15,86 @@ let Update = require( './classes/Update.js' )
 
 function TelegramBotLogic() {
 
-	// Interface
-	this.init = init;
-	this.run = run;
-	this.stop = stop;
-	this.stopImmediately = stopImmediately;
-	this.insertUpdate = insertUpdate;
-	this.registerComponent = registerComponent;
-	this.registerInitializationFunctions = registerInitializationFunctions;
+	let me = this;
 
-	Object.defineProperty( this, 'data', {
+	// Interface
+	me.init = init;
+	me.run = run;
+	me.stop = stop;
+	me.stopImmediately = stopImmediately;
+	me.insertUpdate = insertUpdate;
+
+	me.registerComponent = registerComponent;
+	me.registerInitializationFunctions = registerInitializationFunctions;
+
+	me.createRule = createRule;
+	me.getChat = getChat;
+	me.getUser = getUser;
+
+	me.assert = assert;
+	me.retract = retract;
+	me.not = not;
+	me.exists = exists;
+
+	Object.defineProperty( me, 'data', {
 		get: () => Array.from( _reactor.data.entries() )
 	} );
 
-	Object.defineProperty( this, 'domain', {
+	Object.defineProperty( me, 'domain', {
 		get: () => _domain
 	} );
 
 	// Implementation
 
-	var me = this,
-		_reactor,
-		_engine,
-		_initFunctions = [],
-		_domain = {},
-		_running = false,
-		_shuttingDown = false;
+	var _reactor
+		, _initFunctions = []
+		, _ruleBuilders = []
+		, _assertions = []
+		, _domain = {}
+		, _running = false
+		, _shuttingDown = false
+		;
+
+	function assert( x ) {
+		if ( !_reactor ) {
+			_assertions.push( x );
+		} else {
+			_reactor.assert( x );
+		}
+	}
+
+	function retract( x ) {
+		if ( !_reactor )
+			throw new Error( 'Reactor not started.' );
+		_reactor.retract( x );
+	}
+
+	function not( x ) {
+		if ( !_reactor )
+			throw new Error( 'Reactor not started.' );
+		_reactor.not( x );
+	}
+
+	function exists( x ) {
+		if ( !_reactor )
+			throw new Error( 'Reactor not started.' );
+		_reactor.exists( x );
+	}
 
 	function init( bot, knownChats, knownUsers ) {
+		me.bot = bot;
+		_knownChats = knownChats;
+		_knownUsers = knownUsers;
+
 		_reactor = new RuleReactor( _domain );
-		_engine = new Engine( _reactor, bot, knownChats, knownUsers );
-		_reactor.trace( 0 );
+		_reactor.trace( 1 );
 	}
 
 	function run() {
 		if ( !_running ) {
-			_.each( _initFunctions, fn => fn( _engine ) );
-			_.each( _engine.buildRules(), r => _reactor.createRule( r.name, r.salience, r.domain, r.conditions, r.effect ) );
+			_.each( _initFunctions, fn => fn( me ) );
+			_.each( buildRules(), r => _reactor.createRule( r.name, r.salience, r.domain, r.conditions, r.effect ) );
+			_.each( _assertions, x => _reactor.assert( x ) );
 			_reactor.run( Infinity, true );
 		}
 		return
@@ -64,62 +107,36 @@ function TelegramBotLogic() {
 		return Promise.resolve( telegramUpdate );
 	}
 
-	// Engine is a wrapper object around the reactor function.
-	// All basic functions of reactor are aliased from engine.
-	// The rest of the reactor internals are kept private.
-	// In addition, some common logic functions are present on engine.
-	function Engine( _reactor, bot, knownChats, knownUsers ) {
+	function createRule() {
+		var r = Rule.Builder.create();
+		_ruleBuilders.push( r );
+		return r;
+	}
 
-		var engine = this;
+	function buildRules() {
+		return _.map( _ruleBuilders, rb => rb.build() );
+	}
 
-		// Interface
-		engine.createRule = createRule;
-		engine.buildRules = buildRules;
-		engine.getChat = getChat;
-		engine.getUser = getUser;
-		engine.bot = bot;
-
-		_.each( [ 'assert', 'retract', 'not', 'exists' ], ( k ) => engine[ k ] = _.bind( _reactor[ k ], _reactor ) );
-
-		Object.defineProperty( engine, 'domain', {
-			get: () => _reactor.domain
-		} );
-
-		// Implementation
-		var _ruleBuilders = [];
-
-		function createRule() {
-			var r = Rule.Builder.create();
-			_ruleBuilders.push( r );
-			return r;
+	function getChat( chat ) {
+		let knownChat = _knownChats[ chat.id ];
+		if ( !knownChat ) {
+			knownChat = _knownChats[ chat.id ] = _.clone( chat );
+			knownChat.receivedMessages = 0;
+			knownChat.lastUpdated = new Date( 0 );
+			knownChat.lastMessage = null;
 		}
+		return knownChat;
+	}
 
-		function buildRules() {
-			return _.map( _ruleBuilders, rb => rb.build() );
+	function getUser( user ) {
+		let knownUser = _knownUsers[ user.id ];
+		if ( !knownUser ) {
+			knownUser = _knownUsers[ user.id ] = _.clone( user );
+			knownUser.receivedMessages = 0;
+			knownUser.lastUpdated = new Date( 0 );
+			knownUser.lastMessage = null;
 		}
-
-		function getChat( chat ) {
-			let knownChat = knownChats[ chat.id ];
-			if ( !knownChat ) {
-				knownChat = knownChats[ chat.id ] = _.clone( chat );
-				knownChat.receivedMessages = 0;
-				knownChat.lastUpdated = new Date( 0 );
-				knownChat.lastMessage = null;
-			}
-			return knownChat;
-		}
-
-		function getUser( user ) {
-			let knownUser = knownUsers[ user.id ];
-			if ( !knownUser ) {
-				knownUser = knownUsers[ user.id ] = _.clone( user );
-				knownUser.receivedMessages = 0;
-				knownUser.lastUpdated = new Date( 0 );
-				knownUser.lastMessage = null;
-			}
-			return knownUser;
-		}
-
+		return knownUser;
 	}
 
 	function registerComponent( componentName, componentClass, componentInitializationFn ) {
