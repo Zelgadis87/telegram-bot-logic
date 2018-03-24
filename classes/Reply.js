@@ -25,7 +25,6 @@ Reply.createRules = ( engine ) => {
 		.effect( function( r ) {
 			r.accepted = true;
 			engine.bot.sendMessage( r.message.chat.id, r.responseCode, _.extend( {}, r.options, { reply_to_message_id: r.message.data.message_id } ) ).then( () => {
-				console.info( 'Reply sent' );
 				r.processed = true;
 			}, ( err ) => {
 				// TODO: This should cause a request failed object with N retries and X cooldown.

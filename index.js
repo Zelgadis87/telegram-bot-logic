@@ -24,9 +24,6 @@ function TelegramBotLogic() {
 	me.stopImmediately = stopImmediately;
 	me.insertUpdate = insertUpdate;
 
-	me.registerComponent = registerComponent;
-	me.registerInitializationFunctions = registerInitializationFunctions;
-
 	me.createRule = createRule;
 	me.getChat = getChat;
 	me.getUser = getUser;
@@ -39,9 +36,13 @@ function TelegramBotLogic() {
 	Object.defineProperty( me, 'data', {
 		get: () => Array.from( _reactor.data.entries() )
 	} );
-
+	
 	Object.defineProperty( me, 'domain', {
 		get: () => _domain
+	} );
+	
+	Object.defineProperty( me, 'bot', {
+		get: () => _bot
 	} );
 
 	// Implementation
@@ -51,6 +52,7 @@ function TelegramBotLogic() {
 		, _ruleBuilders = []
 		, _assertions = []
 		, _domain = {}
+		, _bot = null
 		, _running = false
 		, _shuttingDown = false
 		;
@@ -82,19 +84,18 @@ function TelegramBotLogic() {
 	}
 
 	function init( bot, knownChats, knownUsers ) {
-		me.bot = bot;
+		_bot = bot;
 		_knownChats = knownChats;
 		_knownUsers = knownUsers;
-
-		_reactor = new RuleReactor( _domain );
-		_reactor.trace( 1 );
 	}
 
 	function run() {
 		if ( !_running ) {
-			_.each( _initFunctions, fn => fn( me ) );
+			_reactor = new RuleReactor( _domain );
+			_reactor.trace( 0 );
 			_.each( buildRules(), r => _reactor.createRule( r.name, r.salience, r.domain, r.conditions, r.effect ) );
 			_.each( _assertions, x => _reactor.assert( x ) );
+
 			_reactor.run( Infinity, true );
 		}
 		return
@@ -139,15 +140,6 @@ function TelegramBotLogic() {
 		return knownUser;
 	}
 
-	function registerComponent( componentName, componentClass, componentInitializationFn ) {
-		_domain[ componentName ] = componentClass;
-		registerInitializationFunctions( componentInitializationFn );
-	}
-
-	function registerInitializationFunctions( initializationFunction ) {
-		_initFunctions.push( initializationFunction );
-	}
-
 	function stop() {
 
 		if ( _shuttingDown )
@@ -171,13 +163,21 @@ function TelegramBotLogic() {
 		}
 	}
 
-	registerComponent( 'Base', Base, Base.createRules );
-	registerComponent( 'Update', Update, Update.createRules );
-	registerComponent( 'Message', Message, Message.createRules );
-	registerComponent( 'Command', Command, Command.createRules );
-	registerComponent( 'CommandRule', CommandRule, CommandRule.createRules );
-	registerComponent( 'Reply', Reply, Reply.createRules );
-	registerComponent( 'ShutdownRequest', ShutdownRequest, ShutdownRequest.createRules );
+	me.domain.Base = Base;
+	me.domain.Update = Update;
+	me.domain.Message = Message;
+	me.domain.Command = Command;
+	me.domain.CommandRule = CommandRule;
+	me.domain.Reply = Reply;
+	me.domain.ShutdownRequest = ShutdownRequest;
+
+	me.domain.Base.createRules(me);
+	me.domain.Update.createRules(me);
+	me.domain.Message.createRules(me);
+	me.domain.Command.createRules(me);
+	me.domain.CommandRule.createRules(me);
+	me.domain.Reply.createRules(me);
+	me.domain.ShutdownRequest.createRules(me);
 
 	return this;
 
