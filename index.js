@@ -89,10 +89,10 @@ function TelegramBotLogic() {
 		_knownUsers = knownUsers;
 	}
 
-	function run() {
+	function run( traceLevel ) {
 		if ( !_running ) {
 			_reactor = new RuleReactor( _domain );
-			_reactor.trace( 0 );
+			_reactor.trace( traceLevel !== undefined ? traceLevel : 0 );
 			_.each( buildRules(), r => _reactor.createRule( r.name, r.salience, r.domain, r.conditions, r.effect ) );
 			_.each( _assertions, x => _reactor.assert( x ) );
 
